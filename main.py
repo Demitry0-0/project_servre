@@ -31,6 +31,10 @@ login_manager.init_app(app)
 
 @app.route("/")
 def index():
+    session = db_session.create_session()
+    user = session.query(User).filter(User.name == current_user.name).first()
+    if user:
+        return 'Hello  ' + current_user.name
     return '<h1>Вроде робит</h1>'
     # return render_template()
 
