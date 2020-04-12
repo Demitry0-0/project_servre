@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request, make_response, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_restful import reqparse, abort, Api, Resource
 from werkzeug.utils import redirect
-from data import db_session
 from data.loginform import LoginForm
 from data.registrform import RegisterForm
-from data.users import User
 from data.records import Records
+from data.forum import Forum
+from data.users import User
+from data import db_session
+from data import records_api
+from data import user_api
 import datetime
 
 db_session.global_init("db/users.sqlite")
@@ -14,17 +16,6 @@ db_session.global_init("db/users.sqlite")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
-'''api = Api(app)
-# для списка объектов
-api.add_resource(NewsListResource, '/api/v2/news')
-api.add_resource(UsersListResource, '/api/v2/users')
-api.add_resource(JobsListResource, '/api/v2/jobs')
-
-# для одного объекта
-api.add_resource(NewsResource, '/api/v2/news/<int:news_id>')
-api.add_resource(UsersResource, '/api/v2/users/<int:user_id>')
-api.add_resource(JobsResource, '/api/v2/jobs/<int:job_id>')
-'''
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -97,6 +88,8 @@ def reqister():
 
 def main():
     # session = db_session.create_session()
+    app.register_blueprint(records_api.blueprint)
+    app.register_blueprint(user_api.blueprint)
     app.run()
 
 

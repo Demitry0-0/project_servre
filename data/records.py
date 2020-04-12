@@ -11,7 +11,7 @@ class Records(SqlAlchemyBase, SerializerMixin):
                            primary_key=True, autoincrement=True)
     map_name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     points = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    name = sqlalchemy.Column(sqlalchemy.Integer,
+    user_id = sqlalchemy.Column(sqlalchemy.Integer,
                              sqlalchemy.ForeignKey("users.id"))
 
     user = orm.relation('User', back_populates='records')
