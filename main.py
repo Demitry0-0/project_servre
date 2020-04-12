@@ -32,7 +32,20 @@ login_manager.init_app(app)
 @app.route("/")
 def index():
     return '<h1>Вроде робит</h1>'
-    #return render_template()
+    # return render_template()
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    session = db_session.create_session()
+    return session.query(User).get(user_id)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -79,7 +92,7 @@ def reqister():
 
 
 def main():
-    #session = db_session.create_session()
+    # session = db_session.create_session()
     app.run()
 
 
