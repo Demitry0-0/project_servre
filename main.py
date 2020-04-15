@@ -118,6 +118,31 @@ def logout():
     return redirect("/")
 
 
+@app.route('/records')
+@app.route('/records/<name>', methods=['GET', 'POST'])
+def records(name=None):
+    session = db_session.create_session()
+    maps = session.query(Maps)
+    if name:
+        count = "Все рекорды на карте " + name
+        records = sorted(session.query(Records).filter(Records.map_name == name),
+                         key=lambda x: x.points)[::-1]
+    else:
+        count = 'Все рекорды'
+        records = sorted(session.query(Records),
+                         key=lambda x: x.map_name)[::-1]
+    return render_template('records.html', title='Рекорды', maps=maps, records=records, count=count)
+
+
+@app.route('/get_one_records', methods=['GET', 'POST'])
+def get_one_records():
+    records = request.form.get('records')
+    session = db_session.create_session()
+    maps = session.query(Maps).filter(Maps.name_map == records).first()
+    url = f'/records/{maps.name_map}' if maps else '/records'
+    return redirect(url)
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -165,16 +190,7 @@ def main():
     session = db_session.create_session()
     app.register_blueprint(records_api.blueprint)
     app.register_blueprint(user_api.blueprint)
-    '''
-    maps = Maps(name_map="naice", file1="static/img/naice.png", file2="static/img/good.jpg",
-                downoload_map='maps/good.txt')
-    session.add(maps)
-    session.commit()
-    maps = Maps(name_map="naice", file1="static/img/good.jpg", file2="static/img/naice.png",
-                downoload_map='maps/naice.txt')
-    session.add(maps)
-    session.commit()'''
-    app.run(host='192.168.1.54')
+    app.run()
 
 
 if __name__ == '__main__':
