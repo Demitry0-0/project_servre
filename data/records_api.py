@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from data import db_session
 from data.records import Records
+from data.maps import Maps
 
 blueprint = Blueprint('jobs_api', __name__,
                       template_folder='templates')
@@ -9,25 +10,46 @@ blueprint = Blueprint('jobs_api', __name__,
 @blueprint.route('/api/records')
 def get_records():
     session = db_session.create_session()
-    records = session.query(Records).all()
+    records = []
+    for i in session.query(Maps):
+        lst = session.query(Records).filter(Records.map_name == i.name_map)
+        if lst:
+            records.append(sorted(lst, key=lambda x: x.points, reverse=True)[:5])
+        else:
+            break
     return jsonify(
         {
             'records':
-                [item.to_dict(only=('id', 'map_name', 'points', 'user_id'))
-                 for item in records]
+                [[item.to_dict(only=('map_name', 'points', 'user_id'))
+                  for item in records[i]] for i in range(len(records))]
         }
     )
 
 
 @blueprint.route('/api/records/<int:job_id>', methods=['GET'])
-def get_one_record(job_id):
+def get_one_record(record_id):
     session = db_session.create_session()
-    record = session.query(Records).get(job_id)
+    record = session.query(Records).get(record_id)
     if not record:
         return jsonify({'error': 'Not found'})
     return jsonify(
         {
             'record': record.to_dict(only=('id', 'map_name', 'points', 'user_id'))
+        }
+    )
+
+
+@blueprint.route('/api/records/<name>', methods=['GET'])
+def get_record(name):
+    session = db_session.create_session()
+    records = session.query(Records).filter(Records.map_name == name)
+    if not records:
+        return jsonify({'records': False})
+    return jsonify(
+        {
+            'records':
+                [item.to_dict(only=('map_name', 'points', 'user_id'))
+                 for item in sorted(records, key=lambda x: x.points, reverse=True)[:10]]
         }
     )
 
@@ -67,9 +89,9 @@ def transform_one_record(job_id):
 
 
 @blueprint.route('/api/records/<int:job_id>', methods=['DELETE'])
-def delete_record(job_id):
+def delete_record(record_id):
     session = db_session.create_session()
-    record = session.query(Records).get(job_id)
+    record = session.query(Records).get(record_id)
     if not record:
         return jsonify({'error': 'Not found'})
     session.delete(record)

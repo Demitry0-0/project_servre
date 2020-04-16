@@ -11,6 +11,8 @@ from data.maps import Maps
 from data import db_session
 from data import records_api
 from data import user_api
+from data import maps_api
+from data import alisa
 import datetime
 
 db_session.global_init("db/users.sqlite")
@@ -125,12 +127,19 @@ def records(name=None):
     maps = session.query(Maps)
     if name:
         count = "Все рекорды на карте " + name
-        records = sorted(session.query(Records).filter(Records.map_name == name),
-                         key=lambda x: x.points)[::-1]
+        records = [sorted(session.query(Records).filter(Records.map_name == name),
+                          key=lambda x: x.points)[::-1]]
     else:
         count = 'Все рекорды'
-        records = sorted(session.query(Records),
-                         key=lambda x: x.map_name)[::-1]
+        records = []
+        for i in session.query(Maps):
+            lst = session.query(Records).filter(Records.map_name == i.name_map)
+            if lst:
+                records.append(sorted(lst, key=lambda x: x.points, reverse=True)[:10])
+            else:
+                break
+
+        # records = sorted(session.query(Records), key=lambda x: x.map_name)[::-1]
     return render_template('records.html', title='Рекорды', maps=maps, records=records, count=count)
 
 
@@ -190,6 +199,9 @@ def main():
     session = db_session.create_session()
     app.register_blueprint(records_api.blueprint)
     app.register_blueprint(user_api.blueprint)
+    app.register_blueprint(maps_api.blueprint)
+    # alisa.alisa_run('https://965bbd14.ngrok.io')#input('Введите адрес или ничего')
+    app.register_blueprint(alisa.blueprint)
     app.run()
 
 
