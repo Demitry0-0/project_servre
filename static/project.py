@@ -6,6 +6,7 @@ import random
 import time
 import sqlite3
 import map
+from requests import post, get, put
 
 FPS = 60
 size = WIDTH, HEIGHT = width, height = 1000, 1000
@@ -673,6 +674,22 @@ class Finish(pygame.sprite.Sprite):
                             cur.execute('''INSERT INTO records 
                             VALUES ({},"{}","{}")'''.format(int(record), hero, a)).fetchall()
                             con.commit()
+                        if a in get('http://127.0.0.1:5000/api/maps').json()['maps']:
+                            users = get('http://127.0.0.1:5000/api/user').json()['users']
+                            for user in users:
+                                if hero == user.name:
+                                    for rec in get('http://127.0.0.1:5000/api/records/' + a).json()['records']:
+                                        if user.id == rec.user_id:
+                                            if rec.points < int(record):
+                                                post('http://127.0.0.1:5000/api/records/' + rec.id,
+                                                     json={'points': int(record)}).json()
+                                        else:
+                                            post('http://127.0.0.1:5000/api/records',
+                                                 json={'points': int(record),
+                                                       'map_name': a,
+                                                       'user_id': user.id}).json()
+                                        break
+                                    break
                     elif 20 <= x <= 125 and 545 <= y <= 575:
                         terminate()
             if self.rect.x < 0:
@@ -781,7 +798,7 @@ def game():
             running = False
         draw(str(len(board.check_points) - 1 + board.count))
         pygame.display.flip()
-        clock.tick(FPS*3)
+        clock.tick(FPS * 3)
     Finish(group, str(len(board.check_points) - 1 + board.count))
 
 

@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, abort, make_response, jsonify
+from flask import Flask, render_template, request, abort, make_response, jsonify, send_from_directory, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_ngrok import run_with_ngrok
 from werkzeug.utils import redirect
 from data.loginform import LoginForm
 from data.registrform import RegisterForm
@@ -18,6 +19,7 @@ import datetime
 db_session.global_init("db/users.sqlite")
 
 app = Flask(__name__)
+run_with_ngrok(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -30,9 +32,10 @@ def index():
     return render_template('index.html', news=news)
 
 
-@app.route('/downoload')
+@app.route('/downoload', methods=['GET', 'POST'])
 def downoload():
-    return app.send_static_file('project.py')
+    send_file('static/project.py', attachment_filename='game.py')
+    # return send_from_directory('/static', 'project.py')
 
 
 @app.route('/downoload_map/<int:id>', methods=['GET', 'POST'])
@@ -42,6 +45,13 @@ def downoload_map(id):
     return app.send_static_file(map.downoload_map)
 
 
+'''@app.route('/downoload/<filename>', methods=['GET', 'POST'])
+def file_downoload(filename):
+    return send_file(filename)'''
+
+@app.route('/information')
+def information():
+    return render_template('information.html')
 @app.route("/maps")
 def maps():
     session = db_session.create_session()
@@ -196,11 +206,9 @@ def reqister():
 
 
 def main():
-    session = db_session.create_session()
     app.register_blueprint(records_api.blueprint)
     app.register_blueprint(user_api.blueprint)
     app.register_blueprint(maps_api.blueprint)
-    # alisa.alisa_run('https://965bbd14.ngrok.io')#input('Введите адрес или ничего')
     app.register_blueprint(alisa.blueprint)
     app.run()
 

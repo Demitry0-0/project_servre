@@ -72,7 +72,7 @@ def handle_dialog(req, res):
         maps = get_maps(False)
         if maps and req['request']['original_utterance'].lower() in maps:
             user_map = req['request']['original_utterance'].lower()
-            records = get(ip + '/api/records/' + user_map).json()['records']
+            records = get(ip + '/api/records/' + user_map).json()['records'][:10]
             if not records:
                 res['response']['text'] = "На этой карте нет рекордов."
                 res['response']['buttons'] = sessionStorage[user_id]['suggests']

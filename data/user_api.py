@@ -17,3 +17,14 @@ def get_one_user(user_id):
             'name': user.to_dict(only=('id', 'name'))
         }
     )
+
+@blueprint.route('/api/user', methods=['GET'])
+def get_users():
+    session = db_session.create_session()
+    users = session.query(User).all()
+    return jsonify(
+        {
+            'users':
+                [item.to_dict(only=('id', 'name')) for item in users]
+        }
+    )

@@ -26,7 +26,7 @@ def get_records():
     )
 
 
-@blueprint.route('/api/records/<int:job_id>', methods=['GET'])
+@blueprint.route('/api/records/<int:record_id>', methods=['GET'])
 def get_one_record(record_id):
     session = db_session.create_session()
     record = session.query(Records).get(record_id)
@@ -48,8 +48,8 @@ def get_record(name):
     return jsonify(
         {
             'records':
-                [item.to_dict(only=('map_name', 'points', 'user_id'))
-                 for item in sorted(records, key=lambda x: x.points, reverse=True)[:10]]
+                [item.to_dict(only=('id', 'map_name', 'points', 'user_id'))
+                 for item in sorted(records, key=lambda x: x.points, reverse=True)]
         }
     )
 
@@ -59,13 +59,10 @@ def create_record():
     if not request.json:
         return jsonify({'error': 'Empty request'})
     elif not all(key in request.json for key in
-                 ['id', 'map_name', 'points', 'user_id']):
+                 ['map_name', 'points', 'user_id']):
         return jsonify({'error': 'Bad request'})
     session = db_session.create_session()
-    if session.query(Records).get(request.json['id']):
-        return jsonify({'error': 'Id already exists'})
     record = Records(
-        id=request.json['id'],
         map_name=request.json['map_name'],
         points=request.json['points'],
         user_id=request.json['user_id']
@@ -75,15 +72,15 @@ def create_record():
     return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/api/records/<int:job_id>', methods=['GET', 'POST'])
-def transform_one_record(job_id):
+@blueprint.route('/api/records/<int:record_id>', methods=['GET', 'POST'])
+def transform_one_record(record_id):
     session = db_session.create_session()
-    record = session.query(Records).get(job_id)
+    record = session.query(Records).get(record_id)
     if not record:
         return jsonify({'error': 'Not found'})
     for key in ['map_name', 'points', 'user_id']:
         if key in request.json.keys():
-            exec('job.{}={}'.format(key, request.json[key]))
+            exec('record.{}={}'.format(key, request.json[key]))
     session.commit()
     return jsonify({'success': 'OK'})
 
