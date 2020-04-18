@@ -8,6 +8,11 @@ import sqlite3
 import map
 from requests import post, get, put
 
+ip = 'http://127.0.0.1:5000'
+name_ip = input('Введите адресную строку или просто нажмите Enter.\nПример http://04991447.ngrok.io \n')
+f_f_f = True
+if name_ip:
+    ip = name_ip
 FPS = 60
 size = WIDTH, HEIGHT = width, height = 1000, 1000
 screen = pygame.display.set_mode(size)
@@ -674,22 +679,32 @@ class Finish(pygame.sprite.Sprite):
                             cur.execute('''INSERT INTO records 
                             VALUES ({},"{}","{}")'''.format(int(record), hero, a)).fetchall()
                             con.commit()
-                        if a in get('http://127.0.0.1:5000/api/maps').json()['maps']:
-                            users = get('http://127.0.0.1:5000/api/user').json()['users']
-                            for user in users:
-                                if hero == user.name:
-                                    for rec in get('http://127.0.0.1:5000/api/records/' + a).json()['records']:
-                                        if user.id == rec.user_id:
-                                            if rec.points < int(record):
-                                                post('http://127.0.0.1:5000/api/records/' + rec.id,
-                                                     json={'points': int(record)}).json()
-                                        else:
-                                            post('http://127.0.0.1:5000/api/records',
-                                                 json={'points': int(record),
-                                                       'map_name': a,
-                                                       'user_id': user.id}).json()
-                                        break
-                                    break
+                        global f_f_f
+                        if f_f_f:
+                            try:
+                                maps = a[:a.find('.')]
+                                glaf = True
+                                if maps in [i['name_map'] for i in get(ip + '/api/maps').json()['maps']]:
+                                    users = get(ip + '/api/user').json()['users']
+                                    for user in users:
+                                        if hero == user['name']:
+                                            for rec in get(ip + '/api/records/' + maps).json()['records']:
+                                                if user['id'] == rec['user_id']:
+                                                    print(3.1)
+                                                    if rec['points'] < int(record):
+                                                        print(post(f"{ip}/api/records/{rec['id']}",
+                                                                   json={'points': int(record)}).json())
+                                                    glaf = False
+                                                    break
+                                            if glaf:
+                                                print(post(ip + '/api/records',
+                                                           json={'points': int(record),
+                                                                 'map_name': maps,
+                                                                 'user_id': user['id']}).json())
+
+                                            break
+                            except:
+                                f_f_f = False
                     elif 20 <= x <= 125 and 545 <= y <= 575:
                         terminate()
             if self.rect.x < 0:

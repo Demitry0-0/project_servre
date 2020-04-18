@@ -1,4 +1,4 @@
-from flask import Flask, request, Blueprint
+from flask import request, Blueprint
 import logging
 from requests import get
 import json
@@ -37,7 +37,7 @@ def handle_dialog(req, res):
         sessionMaps = get(ip + '/api/maps').json()
         sessionStorage[user_id] = {
             'suggests': [
-                # {'title': "Покажи мне все рекорды", 'hide': True},
+                {'title': "Покажи мне все рекорды", 'hide': True},
                 {"title": "Покажи сайт", "url": ip, "hide": True},
                 {'title': "Покажи мне рекорды на карте", 'hide': True}
             ]
@@ -53,21 +53,22 @@ def handle_dialog(req, res):
         res['response']['buttons'] = sessionStorage[user_id]['suggests']
         sessionStorage['get_map'] = False
         return
-    '''if 'все рекорды' in req['request']['original_utterance'].lower():
+    if 'все рекорды' in req['request']['original_utterance'].lower():
         records = get(ip + '/api/records').json()['records']
         if not records:
             res['response']['text'] = 'Рекордов еще нет(('
             res['response']['buttons'] = sessionStorage[user_id]['suggests']
+            return
         string = ''
         for i in records:
             string += f'Карта {i[0]["map_name"]}\n'
             for j in range(len(i)):
                 name = get(f'{ip}/api/user/{i[j]["user_id"]}').json()['name']
-                string += f"{j + 1} место) {name} очков: {i[j]['points']}\n"
+                string += f"{j + 1} место) {name['name']} очков: {i[j]['points']}\n"
         res['response']['text'] = string
         res['response']['buttons'] = sessionStorage[user_id]['suggests'][1:]
         sessionStorage['get_map'] = False
-        return'''
+        return
     if sessionStorage['get_map']:
         maps = get_maps(False)
         if maps and req['request']['original_utterance'].lower() in maps:
@@ -76,6 +77,7 @@ def handle_dialog(req, res):
             if not records:
                 res['response']['text'] = "На этой карте нет рекордов."
                 res['response']['buttons'] = sessionStorage[user_id]['suggests']
+                res['response']['buttons'] = sessionStorage[user_id]['suggests'][:-1] + get_maps()
                 return
             string = ''
             for i in range(len(records)):

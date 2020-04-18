@@ -12,11 +12,10 @@ def get_records():
     session = db_session.create_session()
     records = []
     for i in session.query(Maps):
-        lst = session.query(Records).filter(Records.map_name == i.name_map)
+        lst = sorted(session.query(Records).filter(Records.map_name == i.name_map),
+                     key=lambda x: x.points, reverse=True)[:5]
         if lst:
-            records.append(sorted(lst, key=lambda x: x.points, reverse=True)[:5])
-        else:
-            break
+            records.append(lst)
     return jsonify(
         {
             'records':

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, abort, make_response, jsonify, send_from_directory, send_file
+from flask import Flask, render_template, request, abort, send_file
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_ngrok import run_with_ngrok
 from werkzeug.utils import redirect
@@ -14,7 +14,6 @@ from data import records_api
 from data import user_api
 from data import maps_api
 from data import alisa
-import datetime
 
 db_session.global_init("db/users.sqlite")
 
@@ -32,26 +31,43 @@ def index():
     return render_template('index.html', news=news)
 
 
-@app.route('/downoload', methods=['GET', 'POST'])
-def downoload():
-    send_file('static/project.py', attachment_filename='game.py')
-    # return send_from_directory('/static', 'project.py')
+@app.route('/download')
+def download():
+    return render_template('download.html')
 
 
-@app.route('/downoload_map/<int:id>', methods=['GET', 'POST'])
-def downoload_map(id):
+@app.route('/game.py', methods=['GET', 'POST'])
+def download_py():
+    return send_file('static/project.py')
+
+
+@app.route('/game.zip', methods=['GET', 'POST'])
+def download_zip():
+    return send_file('static/game.zip')
+
+
+@app.route('/file.exe', methods=['GET', 'POST'])
+def download_file():
+    return send_file('static/file.exe')
+
+
+@app.route('/all_game.zip', methods=['GET', 'POST'])
+def download_all():
+    return send_file('static/all_game.zip')
+
+
+@app.route('/downoload_map/<name>', methods=['GET', 'POST'])
+def downoload_map(name):
     session = db_session.create_session()
-    map = session.query(Maps).filter(Maps.id == id).first()
+    map = session.query(Maps).filter(Maps.name_map == name).first()
     return app.send_static_file(map.downoload_map)
 
-
-'''@app.route('/downoload/<filename>', methods=['GET', 'POST'])
-def file_downoload(filename):
-    return send_file(filename)'''
 
 @app.route('/information')
 def information():
     return render_template('information.html')
+
+
 @app.route("/maps")
 def maps():
     session = db_session.create_session()
@@ -83,7 +99,7 @@ def edit_news(id):
     if request.method == "GET":
         session = db_session.create_session()
         news = session.query(News).filter(News.id == id,
-                                          News.user == current_user).first()
+                                          (News.user == current_user) | (current_user.id == 1)).first()
         if news:
             form.title.data = news.title
             form.content.data = news.content
@@ -92,7 +108,7 @@ def edit_news(id):
     if form.validate_on_submit():
         session = db_session.create_session()
         news = session.query(News).filter(News.id == id,
-                                          News.user == current_user).first()
+                                          (News.user == current_user) | (current_user.id == 1)).first()
         if news:
             news.title = form.title.data
             news.content = form.content.data
@@ -108,7 +124,7 @@ def edit_news(id):
 def news_delete(id):
     session = db_session.create_session()
     news = session.query(News).filter(News.id == id,
-                                      News.user == current_user).first()
+                                      (News.user == current_user) | (current_user.id == 1)).first()
     if news:
         session.delete(news)
         session.commit()
@@ -197,6 +213,7 @@ def reqister():
         user = User(
             name=form.name.data,
             email=form.email.data
+            # password=form.password.data
         )
         user.set_password(form.password.data)
         session.add(user)
