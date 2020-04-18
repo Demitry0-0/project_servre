@@ -13,6 +13,7 @@ from data import db_session
 from data import records_api
 from data import user_api
 from data import maps_api
+from data import news_api
 from data import alisa
 
 db_session.global_init("db/users.sqlite")
@@ -28,7 +29,7 @@ login_manager.init_app(app)
 def index():
     session = db_session.create_session()
     news = session.query(News)[::-1]
-    return render_template('index.html', news=news)
+    return render_template('index.html', news=news, ln=len(news))
 
 
 @app.route('/download')
@@ -99,7 +100,8 @@ def edit_news(id):
     if request.method == "GET":
         session = db_session.create_session()
         news = session.query(News).filter(News.id == id,
-                                          (News.user == current_user) | (current_user.id == 1)).first()
+                                          (News.user == current_user) |
+                                          (current_user.id == 1)).first()
         if news:
             form.title.data = news.title
             form.content.data = news.content
@@ -108,7 +110,8 @@ def edit_news(id):
     if form.validate_on_submit():
         session = db_session.create_session()
         news = session.query(News).filter(News.id == id,
-                                          (News.user == current_user) | (current_user.id == 1)).first()
+                                          (News.user == current_user) |
+                                          (current_user.id == 1)).first()
         if news:
             news.title = form.title.data
             news.content = form.content.data
@@ -124,7 +127,8 @@ def edit_news(id):
 def news_delete(id):
     session = db_session.create_session()
     news = session.query(News).filter(News.id == id,
-                                      (News.user == current_user) | (current_user.id == 1)).first()
+                                      (News.user == current_user) |
+                                      (current_user.id == 1)).first()
     if news:
         session.delete(news)
         session.commit()
@@ -164,9 +168,8 @@ def records(name=None):
                 records.append(sorted(lst, key=lambda x: x.points, reverse=True)[:10])
             else:
                 break
-
-        # records = sorted(session.query(Records), key=lambda x: x.map_name)[::-1]
-    return render_template('records.html', title='Рекорды', maps=maps, records=records, count=count)
+    return render_template('records.html', title='Рекорды', maps=maps,
+                           records=records, count=count)
 
 
 @app.route('/get_one_records', methods=['GET', 'POST'])
@@ -213,7 +216,6 @@ def reqister():
         user = User(
             name=form.name.data,
             email=form.email.data
-            # password=form.password.data
         )
         user.set_password(form.password.data)
         session.add(user)
@@ -227,6 +229,7 @@ def main():
     app.register_blueprint(user_api.blueprint)
     app.register_blueprint(maps_api.blueprint)
     app.register_blueprint(alisa.blueprint)
+    app.register_blueprint(news_api.blueprint)
     app.run()
 
 

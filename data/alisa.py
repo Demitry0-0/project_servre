@@ -38,21 +38,53 @@ def handle_dialog(req, res):
         sessionStorage[user_id] = {
             'suggests': [
                 {'title': "Покажи мне все рекорды", 'hide': True},
+                {'title': "Покажи последнюю новость", 'hide': True},
+                {'title': "Покажи новость по номером", 'hide': True},
                 {"title": "Покажи сайт", "url": ip, "hide": True},
                 {'title': "Покажи мне рекорды на карте", 'hide': True}
             ]
         }
         sessionStorage['get_map'] = False
+        sessionStorage['News'] = False
         res['response']['text'] = 'Привет! Чем могу помочь?'
         res['response']['buttons'] = sessionStorage[user_id]['suggests']
 
         return
-
+    if sessionStorage['News'] and req['request']['original_utterance'].isdigit():
+        sessionStorage['News'] = False
+        id = req['request']['original_utterance']
+        news = get(ip + '/api/news/' + id).json()['news']
+        if news:
+            res['response']['text'] = '{}\n{}\nАвтор-{}\nДата - {}'.format(news['title'],
+                                                                           news['content'],
+                                                                           news['user']['name'],
+                                                                           news['created_date'])
+        else:
+            res['response']['text'] = 'Такой новости нет.'
+        res['response']['buttons'] = sessionStorage[user_id]['suggests']
+        return
     if 'сайт' in req['request']['original_utterance'].lower():
         res['response']['text'] = "Отличный сайт, что бы просто похвалить."
         res['response']['buttons'] = sessionStorage[user_id]['suggests']
         sessionStorage['get_map'] = False
         return
+    if not sessionStorage['News'] and 'номером' in req['request']['original_utterance'].lower():
+        sessionStorage['News'] = True
+        res['response']['text'] = "Какая по счету запись?"
+        return
+
+    if "покажи последнюю новость" in req['request']['original_utterance'].lower():
+        news = get(ip + '/api/news').json()['news'][0]
+        if news:
+            res['response']['text'] = '{}\n{}\nАвтор-{}\nДата - {}'.format(news['title'],
+                                                                           news['content'],
+                                                                           news['user']['name'],
+                                                                           news['created_date'])
+        else:
+            res['response']['text'] = "К сожалению новостей нет."
+        res['response']['buttons'] = sessionStorage[user_id]['suggests']
+        return
+
     if 'все рекорды' in req['request']['original_utterance'].lower():
         records = get(ip + '/api/records').json()['records']
         if not records:

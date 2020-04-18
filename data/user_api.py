@@ -9,7 +9,7 @@ blueprint = Blueprint('user_api', __name__,
 @blueprint.route('/api/user/<int:user_id>', methods=['GET'])
 def get_one_user(user_id):
     session = db_session.create_session()
-    user = session.query(User).get(user_id)#filter(User.id == user_id).first()
+    user = session.query(User).get(user_id)
     if not user:
         return jsonify({'error': 'Not found'})
     return jsonify(
@@ -17,6 +17,7 @@ def get_one_user(user_id):
             'name': user.to_dict(only=('id', 'name'))
         }
     )
+
 
 @blueprint.route('/api/user', methods=['GET'])
 def get_users():
