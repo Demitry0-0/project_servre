@@ -39,7 +39,7 @@ def handle_dialog(req, res):
             'suggests': [
                 {'title': "Покажи мне все рекорды", 'hide': True},
                 {'title': "Покажи последнюю новость", 'hide': True},
-                {'title': "Покажи новость по номером", 'hide': True},
+                {'title': "Покажи новость под номером", 'hide': True},
                 {"title": "Покажи сайт", "url": ip, "hide": True},
                 {'title': "Покажи мне рекорды на карте", 'hide': True}
             ]
@@ -74,7 +74,7 @@ def handle_dialog(req, res):
         return
 
     if "покажи последнюю новость" in req['request']['original_utterance'].lower():
-        news = get(ip + '/api/news').json()['news'][0]
+        news = get(ip + '/api/news').json()['news']
         if news:
             res['response']['text'] = '{}\n{}\nАвтор-{}\nДата - {}'.format(news['title'],
                                                                            news['content'],

@@ -10,10 +10,12 @@ blueprint = Blueprint('news_api', __name__,
 def get_news():
     session = db_session.create_session()
     news = session.query(News).all()
+    if not news:
+        return jsonify({'news': False})
     return jsonify(
         {
             'news':
-                [news[-1].to_dict(only=('title', 'content', 'user.name', 'created_date'))]
+                news[-1].to_dict(only=('title', 'content', 'user.name', 'created_date'))
         }
     )
 
